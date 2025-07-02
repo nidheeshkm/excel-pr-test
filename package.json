@@ -1,0 +1,34 @@
+{
+  "name": "slack-pdf-processor",
+  "version": "1.0.0",
+  "description": "Serverless app that processes PDF reports from Slack and sends them via email",
+  "main": "handler.py",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy-dev": "serverless deploy --stage dev",
+    "deploy-prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f slackWebhook -t",
+    "invoke": "serverless invoke -f slackWebhook",
+    "test": "python -m pytest tests/"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-python-requirements": "^6.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/slack-pdf-processor.git"
+  },
+  "keywords": [
+    "serverless",
+    "aws",
+    "lambda",
+    "slack",
+    "pdf",
+    "email",
+    "automation"
+  ]
+}

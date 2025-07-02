@@ -1,0 +1,81 @@
+service: slack-pdf-processor
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  timeout: 300
+  memorySize: 512
+  environment:
+    SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
+    SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+    EMAIL_FROM: ${env:EMAIL_FROM}
+    EMAIL_TO: ${env:EMAIL_TO}
+    S3_BUCKET: ${self:custom.bucketName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+      Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+        - ses:SendRawEmail
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "*"
+
+custom:
+  bucketName: slack-pdf-processor-${self:provider.stage}-${self:service}
+
+functions:
+  slackWebhook:
+    handler: handler.slack_webhook
+    events:
+      - httpApi:
+          path: /slack/events
+          method: post
+    environment:
+      LOG_LEVEL: INFO
+
+  processSlackEvent:
+    handler: handler.process_slack_event
+    timeout: 300
+    environment:
+      LOG_LEVEL: INFO
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldFiles
+              Status: Enabled
+              ExpirationInDays: 1
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+plugins:
+  - serverless-python-requirements
+
+package:
+  exclude:
+    - node_modules/**
+    - .venv/**
+    - __pycache__/**
+    - .pytest_cache/**
+    - tests/**
